@@ -22,24 +22,34 @@ class Node {
 
   // tick increments the internal logical clock for the Node by a single tick. Election
   // timeouts and heartbeat timeouts are in units of ticks.
+  
+  // 应用层的一个定时驱动，告知 raft 层时间流逝了一个 tick，但 raft 层是否需要根据这个 tick 做一些事情，是由 raft 层自己决定的
   virtual void tick() = 0;
 
   // campaign causes the Node to transition to candidate state and start campaigning to become leader.
+
+  // 应用层驱动 raft 层进入选举状态，尝试切换成 candidate 去竞选 leader
   virtual Status campaign() = 0;
 
   // propose proposes that data be appended to the log. Note that proposals can be lost without
   // notice, therefore it is user's job to ensure proposal retries.
+
+  // 应用层向 raft 层提交发送写请求，raft 层再具体处理写请求
   virtual Status propose(std::vector<uint8_t> data) = 0;
 
   // propose_conf_change proposes config change.
   // At most one ConfChange can be in the process of going through consensus.
   // Application needs to call apply_conf_change when applying EntryConfChange type entry.
+
+  // 应用层向 raft 层发送配置变更请求
   virtual Status propose_conf_change(const proto::ConfChange& cc) = 0;
 
   // step advances the state machine using the given message. ctx.Err() will be returned, if any.
   virtual Status step(proto::MessagePtr msg) = 0;
 
   // ready returns the current point-in-time state of this RawNode.
+
+  // 应用层通过ready方法获取 raft 层的状态和一些需要应用层的任务，raft 层会把当前状态和一些任务封装成 Ready 对象返回给应用层
   virtual ReadyPtr ready() = 0;
 
   // has_ready called when RawNode user need to check if any Ready pending.
@@ -55,12 +65,16 @@ class Node {
   // commands. For example. when the last ready contains a snapshot, the application might take
   // a long time to apply the snapshot data. To continue receiving ready without blocking raft
   // progress, it can call advance before finishing applying the last ready.
+
+  // 应用层告知 raft 层，上一次的 ready 已经被处理完了，可以准备好下一次的 ready 了
   virtual void advance(ReadyPtr ready) = 0;
 
   // apply_conf_change applies config change to the local node.
   // Returns an opaque ConfState protobuf which must be recorded
   // in snapshots. Will never return nil; it returns a pointer only
   // to match MemoryStorage.Compact.
+
+  // 应用层告知 raft 层，配置变更请求已经生效被应用到状态机中去了，由算法层做后续配置变更的操作
   virtual proto::ConfStatePtr apply_conf_change(const proto::ConfChange& cc) = 0;
 
   // transfer_leadership attempts to transfer leadership to the given transferee.
@@ -70,6 +84,8 @@ class Node {
   // Read state has a read index. Once the application advances further than the read
   // index, any linearizable read requests issued before the read request can be
   // processed safely. The read state will have the same rctx attached.
+
+  // 应用层向 raft 层发送读请求
   virtual Status read_index(std::vector<uint8_t> rctx) = 0;
 
   // raft_status returns the current status of the raft state machine.

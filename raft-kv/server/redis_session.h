@@ -36,11 +36,11 @@ class RedisSession : public std::enable_shared_from_this<RedisSession> {
   static void keys_command(std::shared_ptr<RedisSession> self, struct redisReply* reply);
  public:
   bool quit_;
-  RedisStore* server_;
-  boost::asio::ip::tcp::socket socket_;
-  std::vector<uint8_t> read_buffer_;
+  RedisStore* server_;   // redisStore
+  boost::asio::ip::tcp::socket socket_; // 传输模块，使用redisStore 的 socket_ 私有成员初始化
+  std::vector<uint8_t> read_buffer_;  // 读取消息的缓冲区
   redisReader* reader_;
-  ByteBuffer send_buffer_;
+  ByteBuffer send_buffer_;  // 发送消息的缓冲区
 };
 typedef std::shared_ptr<RedisSession> RedisSessionPtr;
 

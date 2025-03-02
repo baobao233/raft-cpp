@@ -6,6 +6,7 @@
 
 namespace kv {
 
+// 快照的 wal
 struct WAL_Snapshot {
   uint64_t index;
   uint64_t term;
@@ -15,9 +16,10 @@ struct WAL_Snapshot {
 typedef uint8_t WAL_type;
 
 #pragma pack(1)
+// 数据的 wal
 struct WAL_Record {
   WAL_type type;  /*the data type*/
-  uint8_t len[3]; /*the data length, max len: 0x00FFFFFF*/
+  uint8_t len[3]; // 将data的长度分解成三部分，这样可以在需要时轻松地将长度信息存储为字节数组，便于在不同的系统或网络传输中使用。
   uint32_t crc;   /*crc32 for data*/
   char data[0];
 };
@@ -25,15 +27,17 @@ struct WAL_Record {
 
 #define MAX_WAL_RECORD_LEN (0x00FFFFFF)
 
+// 还原数据长度
 static inline uint32_t WAL_Record_len(const WAL_Record& record) {
   return uint32_t(record.len[2]) << 16 | uint32_t(record.len[1]) << 8 | uint32_t(record.len[0]) << 0;
 }
 
+// 将一个 32 位的长度值分解为三个字节，并存储在 WAL_Record 的 len 数组中。通过这种方式，可以在需要时轻松地将data 的长度信息存储为字节数组，便于在不同的系统或网络传输中使用。
 static inline void set_WAL_Record_len(WAL_Record& record, uint32_t len) {
-  len = std::min(len, (uint32_t) MAX_WAL_RECORD_LEN);
-  record.len[2] = (len >> 16) & 0x000000FF;
-  record.len[1] = (len >> 8) & 0x000000FF;
-  record.len[0] = (len >> 0) & 0x000000FF;
+  len = std::min(len, (uint32_t) MAX_WAL_RECORD_LEN);  // 限制传入的长度
+  record.len[2] = (len >> 16) & 0x000000FF;  // 储存长度的高位字节，第 16 到 23 位
+  record.len[1] = (len >> 8) & 0x000000FF;   // 存储长度的中间字节（第 8 到 15 位）
+  record.len[0] = (len >> 0) & 0x000000FF;   // 存储长度的低位字节（第 0 到 7 位）
 }
 
 class WAL_File;
@@ -95,7 +99,7 @@ class WAL {
   proto::HardState state_;  // hardstate recorded at the head of WAL
   WAL_Snapshot start_;      // snapshot to start reading
   uint64_t enti_;            // index of the last entry saved to the wal
-  std::vector<std::shared_ptr<WAL_File>> files_;
+  std::vector<std::shared_ptr<WAL_File>> files_;  // 维护了所有的 wal 日志
 
 };
 

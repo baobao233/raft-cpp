@@ -9,7 +9,7 @@ void entry_limit_size(uint64_t max_size, std::vector<proto::EntryPtr>& entries) 
     return;
   }
 
-  uint64_t size = entries[0]->serialize_size();
+  uint64_t size = entries[0]->serialize_size();  // 序列化消息，用于 check 还没进行 snapshot 的日志是否已经达到阈值
   for (size_t limit = 1; limit < entries.size(); ++limit) {
     size += entries[limit]->serialize_size();
     if (size > max_size) {

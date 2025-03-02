@@ -9,6 +9,7 @@ static const char* g_cluster = NULL;
 static uint16_t g_port = 0;
 
 int main(int argc, char* argv[]) {
+  // 解析 Procfile 中的启动命令
   GOptionEntry entries[] = {
       {"id", 'i', 0, G_OPTION_ARG_INT64, &g_id, "node id", NULL},
       {"cluster", 'c', 0, G_OPTION_ARG_STRING, &g_cluster, "comma separated cluster peers", NULL},
@@ -23,6 +24,7 @@ int main(int argc, char* argv[]) {
     fprintf(stderr, "option parsing failed: %s\n", error->message);
     exit(EXIT_FAILURE);
   }
+  // 打印启动配置
   fprintf(stderr, "id:%lu, port:%d, cluster:%s\n", g_id, g_port, g_cluster);
 
   if (g_id == 0 || g_port == 0) {
@@ -32,6 +34,6 @@ int main(int argc, char* argv[]) {
     exit(EXIT_FAILURE);
   }
 
-  kv::RaftNode::main(g_id, g_cluster, g_port);
+  kv::RaftNode::main(g_id, g_cluster, g_port);  // 启动 node 节点
   g_option_context_free(context);
 }

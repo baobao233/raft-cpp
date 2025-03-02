@@ -11,6 +11,7 @@
 
 namespace kv {
 
+// 应用层和外部打交道时候的接口
 class RaftNode : public RaftServer {
  public:
   static void main(uint64_t id, const std::string& cluster, uint16_t port);
@@ -55,21 +56,20 @@ class RaftNode : public RaftServer {
   boost::asio::io_service io_service_;
   boost::asio::deadline_timer timer_;
   uint64_t id_;
-  std::vector<std::string> peers_;
-  uint64_t last_index_;
+  std::vector<std::string> peers_;  // 集群中所有节点的地址
+  uint64_t last_index_;  // 节点中 entries 最后的 index
   proto::ConfStatePtr conf_state_;
   uint64_t snapshot_index_;
   uint64_t applied_index_;
 
-  MemoryStoragePtr storage_;
-  std::unique_ptr<Node> node_;
-  TransporterPtr transport_;
-  std::shared_ptr<RedisStore> redis_server_;
-
+  MemoryStoragePtr storage_;  // storage 层的具体实现，目前是通过 redis 来做的
+  std::unique_ptr<Node> node_;  // raft层唯一的入口
+  TransporterPtr transport_;  // 网络通信的具体实现
+  std::shared_ptr<RedisStore> redis_server_;  
   std::vector<uint8_t> snap_data_;
   std::string snap_dir_;
   uint64_t snap_count_;
-  std::unique_ptr<Snapshotter> snapshotter_;
+  std::unique_ptr<Snapshotter> snapshotter_; // 快照模块，unique_ptr
 
   std::string wal_dir_;
   WAL_ptr wal_;

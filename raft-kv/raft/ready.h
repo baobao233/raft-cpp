@@ -29,6 +29,7 @@ struct SoftState {
 typedef std::shared_ptr<SoftState> SoftStatePtr;
 class Raft;
 
+// Ready 对象通常包含了需要应用的日志条目、需要发送的消息、快照、以及当前的软状态和硬状态等。
 struct Ready {
   Ready()
       : must_sync(false) {}
@@ -47,11 +48,15 @@ struct Ready {
   // The current volatile state of a Node.
   // soft_state will be nil if there is no update.
   // It is not required to consume or store soft_state.
+
+  // 软状态（并不需要持久化的状态），比如leader的身份，节点状态等，因为这些信息都是经常变化的
   SoftStatePtr soft_state;
 
   // The current state of a Node to be saved to stable storage BEFORE
   // messages are sent.
   // hard_state will be equal to empty state if there is no update.
+
+  // 硬状态（需要持久化的信息），包括当前任期，投票的归属，预写日志对应的索引号等
   proto::HardState hard_state;
 
   // read_states can be used for node to serve linearizable read requests locally
@@ -62,6 +67,8 @@ struct Ready {
 
   // entries specifies entries to be saved to stable storage BEFORE
   // messages are sent
+
+  // raft层传给应用层的待持久化的日志条目，
   std::vector<proto::EntryPtr> entries;
 
   // Snapshot specifies the snapshot to be saved to stable storage.
@@ -70,12 +77,16 @@ struct Ready {
   // committed_entries specifies entries to be committed to a
   // store/state-machine. These have previously been committed to stable
   // store.
+
+  // 已经提交的预写日志，这些日志已经被大多数节点接受，因此raft层传给应用层，让应用层帮忙推进应用到状态机中去
   std::vector<proto::EntryPtr> committed_entries;
 
   // messages specifies outbound messages to be sent AFTER entries are
   // committed to stable storage.
   // If it contains a MsgSnap message, the application MUST report back to raft
   // when the snapshot has been received or has failed by calling ReportSnapshot.
+
+  // raft层传给应用层的消息，这些消息在应用层去调用通信模块去发送到 Msg 中的to 节点中去
   std::vector<proto::MessagePtr> messages;
 
   // must_sync indicates whether the hard_state and entries must be synchronously

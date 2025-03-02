@@ -85,6 +85,7 @@ const char* entry_type_to_string(EntryType type) {
   }
 }
 
+// 集群内部消息
 bool Message::is_local_msg() const {
   return type == MsgHup || type == MsgBeat || type == MsgUnreachable || type == MsgSnapStatus
       || type == MsgCheckQuorum;

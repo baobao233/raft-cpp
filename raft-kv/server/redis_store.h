@@ -17,22 +17,23 @@ struct RedisCommitData {
   static const uint8_t kCommitDel = 1;
 
   uint8_t type;
-  std::vector<std::string> strs;
+  std::vector<std::string> strs;  // (key and value) or key
   MSGPACK_DEFINE (type, strs);
 };
 
+// 提交给 raft 层的一个结构体
 struct RaftCommit {
 
   RaftCommit() {}
 
-  uint32_t node_id;
-  uint32_t commit_id;
-  RedisCommitData redis_data;
+  uint32_t node_id;  // 哪个节点的提交
+  uint32_t commit_id;  // 提交的 id
+  RedisCommitData redis_data;  // 具体的操作（set or delete）和具体的数据 (key value or key)
   MSGPACK_DEFINE (node_id, commit_id, redis_data);
 };
 
 typedef std::function<void(const Status&)> StatusCallback;
-typedef std::shared_ptr<std::vector<uint8_t>> SnapshotDataPtr;
+typedef std::shared_ptr<std::vector<uint8_t>> SnapshotDataPtr;  // 快照数据的指针
 typedef std::function<void(SnapshotDataPtr)> GetSnapshotCallback;
 
 class RaftNode;
@@ -42,6 +43,7 @@ class RedisStore {
 
   ~RedisStore();
 
+  // 停止 RedisStore 中的通信模块，等待 worker_ 线程结束
   void stop() {
     io_service_.stop();
     if (worker_.joinable()) {
@@ -77,12 +79,12 @@ class RedisStore {
   void start_accept();
 
   RaftNode* server_;
-  boost::asio::io_service io_service_;
+  boost::asio::io_service io_service_;  // io 模块
   boost::asio::ip::tcp::acceptor acceptor_;
   std::thread worker_;
-  std::unordered_map<std::string, std::string> key_values_;
+  std::unordered_map<std::string, std::string> key_values_;  // 实际的 kv 储存
   uint32_t next_request_id_;
-  std::unordered_map<uint32_t, StatusCallback> pending_requests_;
+  std::unordered_map<uint32_t, StatusCallback> pending_requests_;  // 待处理的 request，k: request_id, v:处理函数
 };
 
 }
