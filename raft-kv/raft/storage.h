@@ -6,16 +6,19 @@
 
 namespace kv {
 
+// Storage 是一个虚基类，可以通过我们具体的实现来实现持久化存储
 class Storage {
  public:
   ~Storage() = default;
 
   // initial_state returns the saved hard_state and ConfState information.
+  // 返回节点已经保存的初始状态
   virtual Status initial_state(proto::HardState& hard_state, proto::ConfState& conf_state) = 0;
 
   // entries returns a slice of log entries in the range [low,high).
   // MaxSize limits the total size of the log entries returned, but
   // entries returns at least one entry if any.
+  // 给定一个索引范围，把这部分预写日志以一个切片的形式返回
   virtual Status entries(uint64_t low,
                          uint64_t high,
                          uint64_t max_size,
@@ -25,6 +28,7 @@ class Storage {
   // [FirstIndex()-1, LastIndex()]. The term of the entry before
   // FirstIndex is retained for matching purposes even though the
   // rest of that entry may not be available.
+  // 传入一个索引值，返回这个索引值对应的的任期
   virtual Status term(uint64_t i, uint64_t& term) = 0;
 
   // LastIndex returns the index of the last entry in the log.

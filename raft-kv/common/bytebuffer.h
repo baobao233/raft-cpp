@@ -14,6 +14,7 @@ class ByteBuffer {
 
   void read_bytes(uint32_t bytes);
 
+  // 剩余可读位置
   bool readable() const {
     return writer_ > reader_;
   }
@@ -36,9 +37,9 @@ class ByteBuffer {
  private:
   void may_shrink_to_fit();
 
-  uint32_t reader_;
-  uint32_t writer_;
-  std::vector<uint8_t> buff_;
+  uint32_t reader_;  // 读字节
+  uint32_t writer_;  // 写字节
+  std::vector<uint8_t> buff_;  // 缓冲区
 };
 
 }

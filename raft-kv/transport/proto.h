@@ -8,9 +8,9 @@ const uint8_t TransportTypeDebug = 5;
 
 #pragma pack(1)
 struct TransportMeta {
-  uint8_t type;
-  uint32_t len;
-  uint8_t data[0];
+  uint8_t type;  // 类型
+  uint32_t len;  // 大小
+  uint8_t data[0];  // 数据
 };
 #pragma pack()
 

@@ -19,11 +19,13 @@ class InFlights {
         count(0),
         size(static_cast<uint32_t>(max_inflight_msgs)) {}
 
+  // 重置滑动窗口
   void reset() {
     start = 0;
     count = 0;
   }
 
+  // message 的数量和 buffer 的大小相等的时候
   bool is_full() const {
     return size == count;
   }
@@ -43,18 +45,20 @@ class InFlights {
   // the size of the buffer
   uint32_t size;
 
-  // ring buffer contains the index of the last entry
-  // inside one message.
+  // 环形缓冲区包含一条message中最后一个预写日志的索引。
   std::vector<uint64_t> buffer;
 };
 
 // Progress represents a follower’s progress in the view of the leader. Leader maintains
 // progresses of all followers, and sends entries to the follower based on its progress.
+
+// 一个 Progress 对象代表了一个 follower 的进度，即 leader 维护所有 follower 的进度，包括 match 和 next 等信息。
+// 通过这两个信息，leader 可以知道哪些预写日志是已经被大多数节点所接受了，可以作为一个 commitIndex
 class Progress {
  public:
   explicit Progress(uint64_t max_inflight)
-      : match(0),
-        next(0),
+      : match(0),  // 该节点已经同步日志的索引
+        next(0),  // 下一个向节点同步时的日志索引
         state(ProgressState::ProgressStateProbe),
         paused(false),
         pending_snapshot(0),
@@ -100,12 +104,13 @@ class Progress {
   // is equal or higher than the pending_snapshot.
   bool need_snapshot_abort() const;
 
+  // 重新把 pending_snapshot 置为 0
   void snapshot_failure() {
     pending_snapshot = 0;
   }
 
-  uint64_t match;
-  uint64_t next;
+  uint64_t match; // 该节点已经同步日志的索引
+  uint64_t next;  // 下一个向节点同步时的日志索引
   // state defines how the leader should interact with the follower.
   //
   // When in ProgressStateProbe, leader sends at most one replication message
@@ -129,9 +134,8 @@ class Progress {
   // is reported to be failed.
   uint64_t pending_snapshot;
 
-  // recent_active is true if the progress is recently active. Receiving any messages
-  // from the corresponding follower indicates the progress is active.
-  // recent_active can be reset to false after an election timeout.
+  // 如果progress最近处于活动状态，则 recent_active 为 true。如果收到
+  // 来自相应follower的任何消息，则表明进度处于活动状态。在选举超时后，recent_active 可以重置为 false。
   bool recent_active;
 
 
@@ -148,7 +152,7 @@ class Progress {
   // be freed by calling inflights.freeTo with the index of the last
   // received entry.
 
-  std::shared_ptr<InFlights> inflights;
+  std::shared_ptr<InFlights> inflights;  // 接收信息的滑动窗口
 
   // is_learner is true if this progress is tracked for a learner.
   bool is_learner;

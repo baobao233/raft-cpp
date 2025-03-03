@@ -13,12 +13,12 @@ ByteBuffer::ByteBuffer()
 }
 
 void ByteBuffer::put(const uint8_t* data, uint32_t len) {
-  uint32_t left = static_cast<uint32_t>(buff_.size()) - writer_;
-  if (left < len) {
+  uint32_t left = static_cast<uint32_t>(buff_.size()) - writer_;  // 剩余可写字节
+  if (left < len) {  // 扩容
     buff_.resize(buff_.size() * 2 + len, 0);
   }
-  memcpy(buff_.data() + writer_, data, len);
-  writer_ += len;
+  memcpy(buff_.data() + writer_, data, len);  // 数据迁移
+  writer_ += len;  // 已写字节增加
 }
 
 uint32_t ByteBuffer::readable_bytes() const {
@@ -32,6 +32,7 @@ void ByteBuffer::read_bytes(uint32_t bytes) {
   may_shrink_to_fit();
 }
 
+// 由于 reder_ == writer_，因此读取追上写，重置
 void ByteBuffer::may_shrink_to_fit() {
   if (reader_ == writer_) {
     reader_ = 0;
